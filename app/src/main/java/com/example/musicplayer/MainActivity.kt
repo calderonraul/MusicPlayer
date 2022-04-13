@@ -1,31 +1,54 @@
 package com.example.musicplayer
 
+
+
+import android.app.Notification
 import android.content.Intent
+import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
-import androidx.appcompat.app.AppCompatActivity
+import android.media.session.MediaSession
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.widget.Button
-import android.widget.ImageButton
 import android.widget.SeekBar
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.example.musicplayer.databinding.ActivityMainBinding
+import java.io.FileOutputStream
+
 
 class MainActivity : AppCompatActivity() {
     var mMediaPlayer: MediaPlayer? = null
     private lateinit var runnable: Runnable
     private var handler: Handler = Handler()
     private lateinit var binding: ActivityMainBinding
+    lateinit var  metaRetriever :MediaMetadataRetriever
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+
+        val mediaSession = MediaSession(this,"mainAct")
+        val mediaStyle = Notification.MediaStyle().setMediaSession(mediaSession.sessionToken)
+
+
+
         var currentSong=0
         val songs= listOf(R.raw.fade,R.raw.spectre,R.raw.calling)
 
+        val notification = Notification.Builder(this )
+            .setStyle(mediaStyle)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .build()
+
+
+
         binding.playButton.setOnClickListener {
             playSound(songs[currentSong])
+            getMEta(songs[currentSong])
+
         }
 
         binding.pauseButton.setOnClickListener {
@@ -58,7 +81,10 @@ class MainActivity : AppCompatActivity() {
                 currentSong=0
                 playSound(songs[currentSong])
             }
+
+
         }
+
 
         binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
@@ -84,7 +110,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun playSound( song : Int) {
         if (mMediaPlayer == null) {
-            mMediaPlayer = MediaPlayer.create(this, song)
+            mMediaPlayer = MediaPlayer.create(this,song)
             mMediaPlayer!!.isLooping = true
             mMediaPlayer!!.start()
         } else mMediaPlayer!!.start()
@@ -108,6 +134,15 @@ class MainActivity : AppCompatActivity() {
             handler.removeCallbacks(runnable)
 
         }
+
+    }
+
+    private fun getMEta( song:Int){
+        val resourceURI: Uri = Uri.parse("android.resource://" + this.packageName + "/" + song)
+        metaRetriever= MediaMetadataRetriever()
+        metaRetriever.setDataSource(this,resourceURI)
+        val nombreAlbum =metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM).toString()
+        Toast.makeText(this, nombreAlbum, Toast.LENGTH_LONG).show()
 
     }
 
