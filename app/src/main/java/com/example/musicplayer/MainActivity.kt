@@ -1,53 +1,97 @@
 package com.example.musicplayer
 
+
+import android.app.Activity
+import android.app.Notification
 import android.content.Intent
+import android.content.SharedPreferences
+import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
-import androidx.appcompat.app.AppCompatActivity
+import android.media.session.MediaSession
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.widget.Button
-import android.widget.ImageButton
 import android.widget.SeekBar
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.example.musicplayer.databinding.ActivityMainBinding
+
 
 class MainActivity : AppCompatActivity() {
     var mMediaPlayer: MediaPlayer? = null
     private lateinit var runnable: Runnable
     private var handler: Handler = Handler()
-
-    lateinit var playBtn: ImageButton
-    lateinit var pauseBtn: ImageButton
-    lateinit var stopBtn: ImageButton
-    lateinit var infoBtn: Button
-    lateinit var seek_bar: SeekBar
+    private lateinit var binding: ActivityMainBinding
+    lateinit var metaRetriever: MediaMetadataRetriever
+    lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        playBtn = findViewById(R.id.playButton)
-        pauseBtn = findViewById(R.id.pauseButton)
-        stopBtn = findViewById(R.id.stopButton)
-        infoBtn = findViewById(R.id.moreInfoButton)
-        seek_bar = findViewById(R.id.seekBar)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        playBtn.setOnClickListener {
-            playSound()
+        sharedPreferences=this.getSharedPreferences("MySP", Activity.MODE_PRIVATE)
+
+
+        val mediaSession = MediaSession(this, "mainAct")
+        val mediaStyle = Notification.MediaStyle().setMediaSession(mediaSession.sessionToken)
+
+
+        var currentSong = 0
+        val songs = listOf(R.raw.fade, R.raw.spectre, R.raw.calling)
+
+       /* val notification = Notification.Builder(this)
+            .setStyle(mediaStyle)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .build()
+*/
+
+
+        binding.playButton.setOnClickListener {
+            playSound(songs[currentSong])
+
 
         }
 
-        pauseBtn.setOnClickListener {
+        binding.pauseButton.setOnClickListener {
             pauseSound()
         }
 
-        stopBtn.setOnClickListener {
+        binding.stopButton.setOnClickListener {
             stopSound()
         }
 
-        infoBtn.setOnClickListener {
+        binding.moreInfoButton.setOnClickListener {
+
+
+            getMEta(songs[currentSong])
             val intent = Intent(this, SongDetail::class.java)
             startActivity(intent)
         }
 
-        seek_bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        binding.prevButton.setOnClickListener {
+            stopSound()
+            currentSong--
+            if (currentSong in 0..2) playSound(songs[currentSong]) else {
+                currentSong = 0
+                playSound(songs[currentSong])
+            }
+
+        }
+
+        binding.nextButton.setOnClickListener {
+            stopSound()
+            currentSong++
+            if (currentSong in 0..2) playSound(songs[currentSong]) else {
+                currentSong = 0
+                playSound(songs[currentSong])
+            }
+
+
+        }
+
+
+        binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
                 if (p2) {
                     mMediaPlayer!!.seekTo(p1)
@@ -61,14 +105,17 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(p0: SeekBar?) {
 
             }
-
         })
-
     }
 
-    private fun playSound() {
+    override fun onDestroy() {
+        super.onDestroy()
+        mMediaPlayer?.release()
+    }
+
+    private fun playSound(song: Int) {
         if (mMediaPlayer == null) {
-            mMediaPlayer = MediaPlayer.create(this, R.raw.fade)
+            mMediaPlayer = MediaPlayer.create(this, song)
             mMediaPlayer!!.isLooping = true
             mMediaPlayer!!.start()
         } else mMediaPlayer!!.start()
@@ -84,7 +131,7 @@ class MainActivity : AppCompatActivity() {
     // 3. Stops playback
     private fun stopSound() {
         if (mMediaPlayer != null) {
-            seek_bar.progress = 0
+            binding.seekBar.progress = 0
             mMediaPlayer!!.stop()
             mMediaPlayer!!.release()
             mMediaPlayer = null
@@ -95,12 +142,37 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun getMEta(song: Int) {
+        val resourceURI: Uri = Uri.parse("android.resource://" + this.packageName + "/" + song)
+        metaRetriever = MediaMetadataRetriever()
+        metaRetriever.setDataSource(this, resourceURI)
+        val songName=
+            metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE).toString()
+
+        val artistName =
+            metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST).toString()
+
+        val albumName =
+            metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM).toString()
+        val year=
+            metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR).toString()
+
+        //Toast.makeText(this, albumName, Toast.LENGTH_LONG).show()
+        var editor=sharedPreferences.edit()
+        editor.putString("artistName",artistName)
+        editor.putString("albumName",albumName)
+        editor.putString("year",year)
+        editor.putString("songName",songName)
+        editor.apply()
+
+    }
+
     private fun initializeSeekBar() {
-        seek_bar.progress = 0
-        seek_bar.max = mMediaPlayer!!.duration
+        binding.seekBar.progress = 0
+        binding.seekBar.max = mMediaPlayer!!.duration
 
         runnable = Runnable {
-            seek_bar.progress = mMediaPlayer!!.currentPosition
+            binding.seekBar.progress = mMediaPlayer!!.currentPosition
             handler.postDelayed(runnable, 1000)
         }
         handler.postDelayed(runnable, 1000)
