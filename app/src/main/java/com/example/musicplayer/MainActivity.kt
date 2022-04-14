@@ -5,6 +5,7 @@ import android.app.Activity
 import android.app.Notification
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.media.session.MediaSession
@@ -12,7 +13,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.widget.SeekBar
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.musicplayer.databinding.ActivityMainBinding
 
@@ -71,9 +71,8 @@ class MainActivity : AppCompatActivity() {
         binding.btnPre.setOnClickListener {
             stopSound()
             currentSong--
-            if (currentSong in 0..2) playSound(songs[currentSong]) else {
+            if (currentSong in 0..songs.size) playSound(songs[currentSong]) else {
                 currentSong = 0
-                setCurrentSong(songs[currentSong])
                 playSound(songs[currentSong])
 
             }
@@ -82,10 +81,11 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnNext.setOnClickListener {
             stopSound()
+            setCurrentSong(songs[currentSong])
             currentSong++
-            if (currentSong in 0..2) playSound(songs[currentSong]) else {
+            if (currentSong in 0..songs.size) playSound(songs[currentSong]) else {
                 currentSong = 0
-                setCurrentSong(songs[currentSong])
+
                 playSound(songs[currentSong])
             }
 
@@ -147,6 +147,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun getMEta(song: Int) {
         val resourceURI: Uri = Uri.parse("android.resource://" + this.packageName + "/" + song)
+        val filepath=resourceURI.toString()
         metaRetriever = MediaMetadataRetriever()
         metaRetriever.setDataSource(this, resourceURI)
         val songName =
@@ -166,6 +167,7 @@ class MainActivity : AppCompatActivity() {
         editor.putString("albumName", albumName)
         editor.putString("year", year)
         editor.putString("songName", songName)
+        editor.putString("filePath",filepath)
         editor.apply()
 
     }
@@ -180,7 +182,9 @@ class MainActivity : AppCompatActivity() {
 
         val artistName =
             metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST).toString()
-
+        val data: ByteArray? = metaRetriever.embeddedPicture
+        val bitmap = BitmapFactory.decodeByteArray(data, 0, data!!.size)
+        binding.imgMusic.setImageBitmap(bitmap)
         binding.txtSongName.text=songName
         binding.txtSingerName.text=artistName
 
