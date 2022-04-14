@@ -31,7 +31,7 @@
         android:id="@+id/songNameTV"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Fade"
+        android:text="@string/song"
         app:layout_constraintBaseline_toBaselineOf="@+id/SongName"
         app:layout_constraintStart_toStartOf="@+id/albumNameTV" />
 
@@ -50,7 +50,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="44dp"
         android:layout_marginTop="35dp"
-        android:text="NCS Releases"
+        android:text="@string/song"
         app:layout_constraintStart_toEndOf="@+id/SongName"
         app:layout_constraintTop_toBottomOf="@+id/songNameTV" />
 
@@ -69,7 +69,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="28dp"
-        android:text="Alan Walker"
+        android:text="@string/song"
         app:layout_constraintStart_toStartOf="@+id/albumNameTV"
         app:layout_constraintTop_toBottomOf="@+id/albumNameTV" />
 
@@ -88,10 +88,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="43dp"
-        android:layout_marginTop="22dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="44dp"
-        android:text="2014"
+        android:text="@string/song"
         app:layout_constraintEnd_toEndOf="@+id/artistNameTV"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/SongName"
         app:layout_constraintTop_toBottomOf="@+id/artistNameTV" />
 </androidx.constraintlayout.widget.ConstraintLayout>

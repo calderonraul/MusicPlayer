@@ -58,6 +58,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnStop.setOnClickListener {
+            binding.btnPlay.setImageResource(R.drawable.ic_play)
+            flag = 0
             stopSound()
         }
 
@@ -71,7 +73,10 @@ class MainActivity : AppCompatActivity() {
         binding.btnPre.setOnClickListener {
             stopSound()
             currentSong--
-            if (currentSong in 0..songs.size) playSound(songs[currentSong]) else {
+            if (currentSong in songs.indices) {
+                playSound(songs[currentSong])
+                setCurrentSong(songs[currentSong])
+            } else {
                 currentSong = 0
                 playSound(songs[currentSong])
 
@@ -81,12 +86,14 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnNext.setOnClickListener {
             stopSound()
-            setCurrentSong(songs[currentSong])
             currentSong++
-            if (currentSong in 0..songs.size) playSound(songs[currentSong]) else {
-                currentSong = 0
-
+            if (currentSong in songs.indices) {
                 playSound(songs[currentSong])
+                setCurrentSong(songs[currentSong])
+            } else {
+                currentSong = 0
+                playSound(songs[currentSong])
+                setCurrentSong(songs[currentSong])
             }
 
 
@@ -147,7 +154,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun getMEta(song: Int) {
         val resourceURI: Uri = Uri.parse("android.resource://" + this.packageName + "/" + song)
-        val filepath=resourceURI.toString()
+        val filepath = resourceURI.toString()
         metaRetriever = MediaMetadataRetriever()
         metaRetriever.setDataSource(this, resourceURI)
         val songName =
@@ -161,19 +168,19 @@ class MainActivity : AppCompatActivity() {
         val year =
             metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR).toString()
 
-        //Toast.makeText(this, albumName, Toast.LENGTH_LONG).show()
+
         var editor = sharedPreferences.edit()
         editor.putString("artistName", artistName)
         editor.putString("albumName", albumName)
         editor.putString("year", year)
         editor.putString("songName", songName)
-        editor.putString("filePath",filepath)
+        editor.putString("filePath", filepath)
         editor.apply()
 
     }
 
 
-    private fun setCurrentSong(song:Int){
+    private fun setCurrentSong(song: Int) {
         val resourceURI: Uri = Uri.parse("android.resource://" + this.packageName + "/" + song)
         metaRetriever = MediaMetadataRetriever()
         metaRetriever.setDataSource(this, resourceURI)
@@ -185,8 +192,8 @@ class MainActivity : AppCompatActivity() {
         val data: ByteArray? = metaRetriever.embeddedPicture
         val bitmap = BitmapFactory.decodeByteArray(data, 0, data!!.size)
         binding.imgMusic.setImageBitmap(bitmap)
-        binding.txtSongName.text=songName
-        binding.txtSingerName.text=artistName
+        binding.txtSongName.text = songName
+        binding.txtSingerName.text = artistName
 
     }
 
